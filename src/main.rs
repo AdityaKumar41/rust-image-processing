@@ -1,16 +1,48 @@
 use image::{imageops::FilterType, open, DynamicImage, GenericImageView};
 
-
-
 fn resize_image(path: &str, width: u32, height: u32) -> DynamicImage {
     let img = open(path).expect("failed to load image");
-    img.resize(width, height, FilterType::Nearest)
+    img.resize(width, height, FilterType::Lanczos3) //you can use Nearest
 }
 
 fn save_image(image: &DynamicImage, output_path: &str) {
 
     image.save_with_format(output_path, image::ImageFormat::Png).expect("failed to save image")
 
+}
+
+fn rotate_image(path: &str, degree:u32) -> DynamicImage {
+    let img = open(path).expect("failed to load image");
+    match degree {
+        90=> img.rotate90(),
+        180=> img.rotate180(),
+        270=> img.rotate270(),
+        _ =>{
+            eprintln!("unsupported rotation angle support 90, 180, 270");
+            img // return original image for unsupported angles
+        }
+    }
+
+}
+
+fn resize_image_maintaning_ratio(path: &str, new_width: Option<u32>, new_height: Option<u32>) -> DynamicImage {
+    let img = open(path).expect("failed to load iamge");
+
+    let (width, height) = img.dimensions();
+
+    // calculate the ratio 
+    let ratio = width as u32 / height as u32 ;
+
+    let (resize_height, resize_width) = match (new_height, new_width) {
+
+        (Some(w), None)=> (w, (w as f32 / ratio as f32).round() as u32),
+        (None, Some(h))=> ((h as f32 * ratio as f32).round() as u32, h),
+        (Some(w), Some(h)) => (w, h), // get the new ration
+        (None, None) => (width, height) // if the width and height not given take default
+
+    };
+
+    img.resize(resize_width, resize_height, FilterType::Lanczos3)
 }
 
 pub fn main(){
@@ -30,4 +62,14 @@ pub fn main(){
 
     save_image(&resize_image, "D:\\coding\\rust-image-processing\\image-processing\\cat-resized.png");
 
-}
+
+    // rotate image
+    let rotated_img = rotate_image("D:\\coding\\rust-image-processing\\image-processing\\cat.jpg", 90);
+    save_image(&rotated_img, "D:\\coding\\rust-image-processing\\image-processing\\cat-rotated-image.png");
+
+    // iamge ratio
+    let ratio_image = resize_image_maintaning_ratio("D:\\coding\\rust-image-processing\\image-processing\\cat.jpg", Some(512), Some(512));
+
+    save_image(&ratio_image, "D:\\coding\\rust-image-processing\\image-processing\\cat-ration-iamge.jpg");
+
+} 
