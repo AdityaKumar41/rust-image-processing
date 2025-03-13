@@ -1,4 +1,4 @@
-use image::{imageops::FilterType, open, DynamicImage, GenericImageView};
+use image::{imageops::{crop_imm, FilterType}, open, DynamicImage, GenericImageView};
 
 fn resize_image(path: &str, width: u32, height: u32) -> DynamicImage {
     let img = open(path).expect("failed to load image");
@@ -9,6 +9,11 @@ fn save_image(image: &DynamicImage, output_path: &str) {
 
     image.save_with_format(output_path, image::ImageFormat::Png).expect("failed to save image")
 
+}
+
+fn crop_image(img: DynamicImage, x: u32, y:u32, width: u32, height: u32) -> DynamicImage {
+    let crooped_img = crop_imm(&img, x, y, width, height);
+    DynamicImage::ImageRgba8(crooped_img.to_image())
 }
 
 fn rotate_image(path: &str, degree:u32) -> DynamicImage {
@@ -27,7 +32,6 @@ fn rotate_image(path: &str, degree:u32) -> DynamicImage {
 
 fn resize_image_maintaning_ratio(path: &str, new_width: Option<u32>, new_height: Option<u32>) -> DynamicImage {
     let img = open(path).expect("failed to load iamge");
-
     let (width, height) = img.dimensions();
 
     // calculate the ratio 
@@ -71,5 +75,9 @@ pub fn main(){
     let ratio_image = resize_image_maintaning_ratio("D:\\coding\\rust-image-processing\\image-processing\\cat.jpg", Some(512), Some(512));
 
     save_image(&ratio_image, "D:\\coding\\rust-image-processing\\image-processing\\cat-ration-iamge.jpg");
+
+
+    let croped_image = crop_image(img, 50, 50, 500, 500);
+    save_image(&croped_image, "D:\\coding\\rust-image-processing\\image-processing\\cat-crop-image.png");
 
 } 
